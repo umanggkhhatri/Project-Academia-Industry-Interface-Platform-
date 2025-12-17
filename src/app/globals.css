@@ -1,0 +1,165 @@
+@import "tailwindcss";
+
+:root {
+  /* Set site-wide background to student portal color (#F0F4FA) */
+  --background: 215 50% 96%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.5rem;
+  --chart-1: 12 76% 61%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background: hsl(var(--background));
+  /* Force default text to black for maximum readability */
+  color: #000000;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Global improvements */
+html { scroll-behavior: smooth; }
+
+/* Typography mapping: use Inter for body, Poppins for headings (from next/font) */
+body { font-family: var(--font-inter), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-poppins), var(--font-inter), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+
+/* Utilities for glassmorphism, underline animation, and hover lift */
+.glass { background: rgba(255, 255, 255, 0.6); backdrop-filter: saturate(120%) blur(12px); -webkit-backdrop-filter: saturate(120%) blur(12px); border: 1px solid rgba(255,255,255,0.35); }
+.glass-dark { background: rgba(15, 23, 42, 0.5); backdrop-filter: saturate(120%) blur(12px); -webkit-backdrop-filter: saturate(120%) blur(12px); border: 1px solid rgba(255,255,255,0.15); }
+.hover-lift { transition: transform 200ms ease, box-shadow 200ms ease; }
+.hover-lift:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+.nav-link { position: relative; }
+.nav-link::after { content: ""; position: absolute; left: 0; bottom: -2px; height: 2px; width: 0; background: currentColor; transition: width 200ms ease; }
+.nav-link:hover::after { width: 100%; }
+.nav-link-active::after { width: 100%; }
+
+/* CTA gradient border glow */
+.cta-gradient-border { position: relative; }
+.cta-gradient-border::before { content: ""; position: absolute; inset: 0; border-radius: 1rem; padding: 2px; background: linear-gradient(135deg, #1e3a8a, #0ea5e9, #f59e0b); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+
+/* Keyframe animations and utility classes */
+@keyframes fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slide-up { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes float-slow { 0% { transform: translateY(0); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0); } }
+.animate-fade-in { animation: fade-in 600ms ease-out both; }
+.animate-slide-up { animation: slide-up 700ms ease-out both; }
+.animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
+.animate-float-slow-delay { animation: float-slow 7.5s ease-in-out infinite 0.6s; }
+.pulse-hover { transition: transform 200ms ease; }
+.pulse-hover:hover { transform: scale(1.02); }
+
+/* Readability Utilities */
+.text-block {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.75;
+}
+
+.prose-readable > p {
+  margin-bottom: 0.75rem;
+  line-height: 1.8;
+  color: #000000;
+}
+.prose-readable > ul {
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.prose-readable > li {
+  margin-bottom: 0.5rem;
+  color: #000000;
+}
+
+.content-box {
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+  border: 1px solid rgba(16, 24, 40, 0.08);
+  backdrop-filter: saturate(140%) blur(6px);
+  color: #000000;
+}
+
+.card-readable {
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.08);
+  border: 1px solid transparent;
+  color: #000000;
+}
+.card-readable .text-muted {
+  color: #667085;
+}
+
+/* Force black overrides for common Tailwind text color classes */
+[class*="text-gray-"] { color: #000000 !important; }
+[class*="text-primary-"] { color: #000000 !important; }
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #0A3D62;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FF9933;
+}

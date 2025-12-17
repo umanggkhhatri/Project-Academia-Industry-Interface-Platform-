@@ -1,0 +1,114 @@
+[
+  {
+    "title": "Internship Orientation Guide",
+    "description": "Overview of internship expectations, timelines, and key policies.",
+    "type": "PDF",
+    "link": "/resources/Internship_Orientation_Guide.pdf",
+    "category": "Pre-Internship"
+  },
+  {
+    "title": "Workplace Etiquette Essentials",
+    "description": "Best practices for behavior, professionalism, and meeting etiquette.",
+    "type": "PDF",
+    "link": "/resources/Workplace_Etiquette_Essentials.pdf",
+    "category": "Pre-Internship"
+  },
+  {
+    "title": "Time Management for Interns",
+    "description": "Practical methods to prioritize tasks and avoid procrastination.",
+    "type": "video",
+    "link": "https://example.com/time-management-video",
+    "category": "Pre-Internship"
+  },
+  {
+    "title": "Professional Communication Basics",
+    "description": "Email, messaging, and meeting communication best practices.",
+    "type": "article",
+    "link": "https://example.com/professional-communication-basics",
+    "category": "Pre-Internship"
+  },
+  {
+    "title": "SMART Goal Setting for Interns",
+    "description": "Define goals and milestones for your internship journey.",
+    "type": "PDF",
+    "link": "/resources/SMART_Goal_Setting_for_Interns.pdf",
+    "category": "Pre-Internship"
+  },
+  {
+    "title": "Communication Skills 101",
+    "description": "Foundations of clear speaking, active listening, and feedback.",
+    "type": "video",
+    "link": "https://example.com/communication-skills-101",
+    "category": "Soft Skills"
+  },
+  {
+    "title": "Teamwork in Tech Projects",
+    "description": "Collaborative workflows, roles, and conflict resolution in teams.",
+    "type": "PDF",
+    "link": "/resources/Teamwork_in_Tech_Projects.pdf",
+    "category": "Soft Skills"
+  },
+  {
+    "title": "Leadership Fundamentals for Students",
+    "description": "Influence without authority, delegation, and accountability.",
+    "type": "article",
+    "link": "https://example.com/leadership-fundamentals",
+    "category": "Soft Skills"
+  },
+  {
+    "title": "Building Confidence at Work",
+    "description": "Mindsets and habits to grow confidence in professional settings.",
+    "type": "video",
+    "link": "https://example.com/building-confidence-video",
+    "category": "Soft Skills"
+  },
+  {
+    "title": "Conflict Resolution Workshop",
+    "description": "Negotiation techniques and frameworks to resolve team conflicts.",
+    "type": "PDF",
+    "link": "/resources/Conflict_Resolution_Workshop.pdf",
+    "category": "Soft Skills"
+  },
+  {
+    "title": "DSA for Interns (Striver's Sheet Overview)",
+    "description": "Key data structures and algorithms to master for internships.",
+    "type": "article",
+    "link": "https://example.com/dsa-for-interns-striver-overview",
+    "category": "Domain Basics"
+  },
+  {
+    "title": "Web Development Roadmap 2025",
+    "description": "Step-by-step guide to modern web development fundamentals.",
+    "type": "PDF",
+    "link": "/resources/Web_Development_Roadmap_2025.pdf",
+    "category": "Domain Basics"
+  },
+  {
+    "title": "Intro to React for Beginners",
+    "description": "Core concepts: components, state, props, and hooks.",
+    "type": "video",
+    "link": "https://example.com/intro-to-react-video",
+    "category": "Domain Basics"
+  },
+  {
+    "title": "AI/ML Basics Primer",
+    "description": "What ML is, common algorithms, datasets, and tooling.",
+    "type": "article",
+    "link": "https://example.com/aiml-basics-primer",
+    "category": "Domain Basics"
+  },
+  {
+    "title": "React Starter Repository",
+    "description": "Boilerplate repo to kickstart React projects with routing.",
+    "type": "article",
+    "link": "https://github.com/example/react-starter",
+    "category": "Domain Basics"
+  },
+  {
+    "title": "Career Prep Checklist for Tech Interns",
+    "description": "Resume, LinkedIn, projects, and interview readiness checklist.",
+    "type": "PDF",
+    "link": "/resources/Career_Prep_Checklist_for_Tech_Interns.pdf",
+    "category": "Domain Basics"
+  }
+]
