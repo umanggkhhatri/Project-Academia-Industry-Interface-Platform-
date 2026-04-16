@@ -11,6 +11,17 @@ const Header = () => {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
+  const scrollToSection = (sectionId: string, closeMobile = false) => {
+    const el = document.getElementById(sectionId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+    if (closeMobile) setIsMenuOpen(false);
+  };
+
+  const navLinkClass = 'nav-link text-white/90 hover:text-white font-medium transition-colors cursor-pointer bg-transparent border-none';
+  const mobileNavLinkClass = 'block w-full text-left px-3 py-2 nav-link text-white/90 hover:text-white font-medium cursor-pointer bg-transparent border-none';
+
   return (
     <header className="sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -23,31 +34,31 @@ const Header = () => {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold text-white drop-shadow">Prashiskshan</h1>
-            <p className="text-xs text-white drop-shadow">Academia-Industry Interface</p>
+                <p className="text-xs text-white drop-shadow">Academia-Industry Interface</p>
               </div>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/" className={`nav-link text-white/90 hover:text-white font-medium transition-colors ${pathname === '#home' ? 'nav-link-active text-white' : ''}`}>
+            <Link href="/" className={navLinkClass}>
               Home
             </Link>
-            <Link href="#how-it-works" className={`nav-link text-white/90 hover:text-white font-medium transition-colors ${pathname === '#how-it-works' ? 'nav-link-active text-white' : ''}`}>
+            <button onClick={() => scrollToSection('how-it-works')} className={navLinkClass}>
               About
-            </Link>
-            <Link href="#challenges" className={`nav-link text-white/90 hover:text-white font-medium transition-colors ${pathname === '#challenges' ? 'nav-link-active text-white' : ''}`}>
+            </button>
+            <button onClick={() => scrollToSection('challenges')} className={navLinkClass}>
               Challenges
-            </Link>
-            <Link href="#features" className={`nav-link text-white/90 hover:text-white font-medium transition-colors ${pathname === '#features' ? 'nav-link-active text-white' : ''}`}>
+            </button>
+            <button onClick={() => scrollToSection('key-features')} className={navLinkClass}>
               Features
-            </Link>
-            <Link href="#why-we-stand-out" className={`nav-link text-white/90 hover:text-white font-medium transition-colors ${pathname === '#why-we-stand-out' ? 'nav-link-active text-white' : ''}`}>
+            </button>
+            <button onClick={() => scrollToSection('why-we-stand-out')} className={navLinkClass}>
               Why
-            </Link>
-            <Link href="#testimonials" className={`nav-link text-white/90 hover:text-white font-medium transition-colors ${pathname === '#testimonials' ? 'nav-link-active text-white' : ''}`}>
+            </button>
+            <button onClick={() => scrollToSection('testimonials')} className={navLinkClass}>
               Testimonials
-            </Link>
+            </button>
           </nav>
 
           {/* Login Buttons */}
@@ -91,48 +102,43 @@ const Header = () => {
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 glass-dark rounded-lg mt-2">
               <Link
-                href="#home"
-                className={`block px-3 py-2 nav-link text-white/90 hover:text-white font-medium ${pathname === '#home' ? 'nav-link-active text-white' : ''}`}
+                href="/"
+                className={mobileNavLinkClass}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
               </Link>
-              <Link
-                href="#how-it-works"
-                className={`block px-3 py-2 nav-link text-white/90 hover:text-white font-medium ${pathname === '#how-it-works' ? 'nav-link-active text-white' : ''}`}
-                onClick={() => setIsMenuOpen(false)}
+              <button
+                className={mobileNavLinkClass}
+                onClick={() => scrollToSection('how-it-works', true)}
               >
                 About
-              </Link>
-              <Link
-                href="#challenges"
-                className={`block px-3 py-2 nav-link text-white/90 hover:text-white font-medium ${pathname === '#challenges' ? 'nav-link-active text-white' : ''}`}
-                onClick={() => setIsMenuOpen(false)}
+              </button>
+              <button
+                className={mobileNavLinkClass}
+                onClick={() => scrollToSection('challenges', true)}
               >
                 Challenges
-              </Link>
-              <Link
-                href="#features"
-                className={`block px-3 py-2 nav-link text-white/90 hover:text-white font-medium ${pathname === '#features' ? 'nav-link-active text-white' : ''}`}
-                onClick={() => setIsMenuOpen(false)}
+              </button>
+              <button
+                className={mobileNavLinkClass}
+                onClick={() => scrollToSection('features', true)}
               >
                 Features
-              </Link>
-              <Link
-                href="#why-we-stand-out"
-                className={`block px-3 py-2 nav-link text-white/90 hover:text-white font-medium ${pathname === '#why-we-stand-out' ? 'nav-link-active text-white' : ''}`}
-                onClick={() => setIsMenuOpen(false)}
+              </button>
+              <button
+                className={mobileNavLinkClass}
+                onClick={() => scrollToSection('why-we-stand-out', true)}
               >
                 Why
-              </Link>
-              <Link
-                href="#testimonials"
-                className={`block px-3 py-2 nav-link text-white/90 hover:text-white font-medium ${pathname === '#testimonials' ? 'nav-link-active text-white' : ''}`}
-                onClick={() => setIsMenuOpen(false)}
+              </button>
+              <button
+                className={mobileNavLinkClass}
+                onClick={() => scrollToSection('testimonials', true)}
               >
                 Testimonials
-              </Link>
-              
+              </button>
+
               {/* Mobile Login Buttons */}
               <div className="pt-4 space-y-2">
                 <Link
