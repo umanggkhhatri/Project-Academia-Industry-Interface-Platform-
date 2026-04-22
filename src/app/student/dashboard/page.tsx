@@ -210,7 +210,7 @@ export default function StudentDashboardPage() {
     loadPdfJs();
   }, []);
 
-  // Fetch internships.json
+  // Fetch internships from MongoDB API
   useEffect(() => {
     if (activeTab !== "finder") return;
     let mounted = true;
@@ -218,11 +218,25 @@ export default function StudentDashboardPage() {
       setFinderLoading(true);
       setFinderError(null);
       try {
-        const res = await fetch("/internships.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to fetch internships.json");
+        const res = await fetch("/api/internships?limit=200", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to fetch internships");
         const json = await res.json();
         if (!mounted) return;
-        setFinderData(Array.isArray(json) ? json : []);
+        // API returns { internships: [...], total, limit, skip }
+        const list = Array.isArray(json.internships) ? json.internships : [];
+        // Map MongoDB fields (_id, skillsRequired) to the local Internship type
+        setFinderData(list.map((item: Record<string, unknown>) => ({
+          id: item._id,
+          title: item.title,
+          company: item.company,
+          location: item.location,
+          duration: item.durationWeeks ? `${item.durationWeeks} weeks` : '',
+          stipend: item.stipend,
+          description: item.description,
+          required_skills: Array.isArray(item.skillsRequired) ? item.skillsRequired : [],
+          preferred_skills: [],
+          link: item.link,
+        })));
       } catch (e) {
         if (!mounted) return;
         setFinderError("Failed to load internships. Please try again later.");
@@ -477,7 +491,7 @@ export default function StudentDashboardPage() {
     setSkillsList((prev) => prev.filter((k) => canonicalizeSkill(k).toLowerCase() !== canonicalizeSkill(s).toLowerCase()));
   };
 
-  // Fetch study resources
+  // Fetch study resources from MongoDB API
   useEffect(() => {
     if (activeTab !== "resources") return;
     let mounted = true;
@@ -485,11 +499,12 @@ export default function StudentDashboardPage() {
       setResourcesLoading(true);
       setResourcesError(null);
       try {
-        const res = await fetch("/study-resources.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to fetch study-resources.json");
+        const res = await fetch("/api/study-resources", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to fetch study resources");
         const json = await res.json();
         if (!mounted) return;
-        setResourcesData(Array.isArray(json) ? json : []);
+        // API returns { resources: [...] }
+        setResourcesData(Array.isArray(json.resources) ? json.resources : []);
       } catch (e) {
         if (!mounted) return;
         setResourcesError("Failed to load study resources. Please try again later.");

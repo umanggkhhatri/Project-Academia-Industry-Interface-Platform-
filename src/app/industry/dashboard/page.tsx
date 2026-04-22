@@ -16,8 +16,9 @@ import {
   Edit,
   XCircle,
   CheckCircle2,
+  Loader2,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Listing = {
   id: string;
@@ -49,28 +50,94 @@ export default function IndustryDashboardPage() {
   const [certTitle, setCertTitle] = useState<string>("");
   const [certDate, setCertDate] = useState<string>("");
 
-  const listings = useMemo<Listing[]>(
-    () => [
-      { id: "l1", title: "Frontend Intern", type: "Internship", location: "Remote", status: "Open", applicants: 24 },
-      { id: "l2", title: "Backend Engineer", type: "Job", location: "Bangalore", status: "Open", applicants: 12 },
-      { id: "l3", title: "Data Analyst Intern", type: "Internship", location: "Delhi", status: "Closed", applicants: 30 },
-    ],
-    []
-  );
+  // Listings state
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [listingsLoading, setListingsLoading] = useState(false);
+  const [listingsError, setListingsError] = useState<string | null>(null);
 
-  const applicants = useMemo<Applicant[]>(
-    () => [
-      { id: "a1", name: "Aarav Gupta", email: "aarav@example.com", skills: ["React", "TypeScript"], match: 92, status: "Applied" },
-      { id: "a2", name: "Meera Iyer", email: "meera@example.com", skills: ["Node.js", "SQL"], match: 85, status: "Shortlisted" },
-      { id: "a3", name: "Rohan Das", email: "rohan@example.com", skills: ["Python", "Pandas"], match: 78, status: "Applied" },
-    ],
-    []
-  );
+  // Applicants state
+  const [applicants, setApplicants] = useState<Applicant[]>([]);
+  const [applicantsLoading, setApplicantsLoading] = useState(false);
+  const [applicantsError, setApplicantsError] = useState<string | null>(null);
+
+  // Create listing form state
+  const [newTitle, setNewTitle] = useState("");
+  const [newType, setNewType] = useState<"Internship" | "Job">("Internship");
+  const [newLocation, setNewLocation] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  const fetchListings = useCallback(async () => {
+    if (!isAuthed || !user?.uid) return;
+    setListingsLoading(true); setListingsError(null);
+    try {
+      const res = await fetch(`/api/internships?limit=50`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const json = await res.json();
+      setListings((Array.isArray(json.internships) ? json.internships : []).map(
+        (item: Record<string, unknown>) => ({
+          id: String(item._id ?? ''),
+          title: String(item.title ?? ''),
+          type: (item.type as Listing['type']) ?? 'Internship',
+          location: String(item.location ?? ''),
+          status: (item.status as Listing['status']) ?? 'Open',
+          applicants: Number(item.applicants ?? 0),
+        })
+      ));
+    } catch { setListingsError('Could not load listings.'); }
+    finally { setListingsLoading(false); }
+  }, [isAuthed, user?.uid]);
+
+  const fetchApplicants = useCallback(async () => {
+    if (!isAuthed) return;
+    setApplicantsLoading(true); setApplicantsError(null);
+    try {
+      const res = await fetch('/api/users?role=student');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const json = await res.json();
+      setApplicants((Array.isArray(json.users) ? json.users : []).map(
+        (u: Record<string, unknown>, i: number) => ({
+          id: String(u.uid ?? u._id ?? i),
+          name: String(u.name ?? 'Unknown'),
+          email: String(u.email ?? ''),
+          skills: [],
+          match: 0,
+          status: 'Applied' as Applicant['status'],
+        })
+      ));
+    } catch { setApplicantsError('Could not load applicants.'); }
+    finally { setApplicantsLoading(false); }
+  }, [isAuthed]);
+
+  useEffect(() => { if (isAuthed) { fetchListings(); fetchApplicants(); } }, [isAuthed, fetchListings, fetchApplicants]);
 
   const filteredApplicants = useMemo(() => {
     if (!skillFilter) return applicants;
     return applicants.filter((a) => a.skills.some((s) => s.toLowerCase().includes(skillFilter.toLowerCase())));
   }, [applicants, skillFilter]);
+
+  const handleCreateListing = async () => {
+    if (!newTitle.trim()) return;
+    setCreating(true);
+    try {
+      const res = await fetch('/api/internships', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newTitle, company: user?.email ?? 'My Company',
+          industry: newType === 'Internship' ? 'General' : 'General',
+          skillsRequired: [], mode: 'on-site', durationWeeks: 12,
+          location: newLocation || 'TBD', description: newDescription,
+          verified: false, postedBy: user?.uid, status: 'Open',
+        }),
+      });
+      if (!res.ok) throw new Error('Create failed');
+      setShowCreateModal(false);
+      setNewTitle(''); setNewType('Internship'); setNewLocation(''); setNewDescription('');
+      await fetchListings();
+    } catch { /* silently ignore */ }
+    finally { setCreating(false); }
+  };
 
   return (
     <main className="bg-[#F5F7FA] min-h-[calc(100vh-64px)] py-10">
@@ -147,7 +214,9 @@ export default function IndustryDashboardPage() {
                       Create Listing
                     </Button>
                   </div>
-                  <div className="space-y-3">
+                <div className="space-y-3">
+                    {listingsLoading && <div className="flex items-center gap-2 text-gray-500 py-2"><Loader2 className="h-4 w-4 animate-spin" /><span className="text-sm">Loading listings…</span></div>}
+                    {listingsError && <p className="text-sm text-amber-700">{listingsError}</p>}
                     {listings.map((l) => (
                       <div key={l.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                         <div>
@@ -459,31 +528,33 @@ export default function IndustryDashboardPage() {
                 <XCircle className="h-5 w-5" />
               </button>
             </div>
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={e => { e.preventDefault(); handleCreateListing(); }}>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Title</label>
-                <input className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]" placeholder="e.g., Frontend Intern" />
+                <input className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]" placeholder="e.g., Frontend Intern" value={newTitle} onChange={e => setNewTitle(e.target.value)} />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Type</label>
-                  <select className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]">
+                  <select className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]" value={newType} onChange={e => setNewType(e.target.value as 'Internship' | 'Job')}>
                     <option>Internship</option>
                     <option>Job</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Location</label>
-                  <input className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]" placeholder="Remote / City" />
+                  <input className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]" placeholder="Remote / City" value={newLocation} onChange={e => setNewLocation(e.target.value)} />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Description</label>
-                <textarea className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]" rows={4} />
+                <textarea className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]" rows={4} value={newDescription} onChange={e => setNewDescription(e.target.value)} />
               </div>
               <div className="flex items-center justify-end gap-2">
-                <Button className="bg-[#0F4C5C] hover:bg-[#0b3a46] text-white" onClick={() => setShowCreateModal(false)}>Cancel</Button>
-                <Button className="bg-[#0F4C5C] hover:bg-[#0b3a46] text-white">Create</Button>
+                <Button className="bg-[#0F4C5C] hover:bg-[#0b3a46] text-white" type="button" onClick={() => setShowCreateModal(false)}>Cancel</Button>
+                <Button className="bg-[#0F4C5C] hover:bg-[#0b3a46] text-white" type="submit" disabled={creating}>
+                  {creating ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Creating…</> : 'Create'}
+                </Button>
               </div>
             </form>
           </div>

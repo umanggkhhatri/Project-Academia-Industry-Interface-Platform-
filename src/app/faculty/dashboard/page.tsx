@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, Variants } from "framer-motion";
@@ -38,24 +38,45 @@ const cardVariants: Variants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35 } },
 };
 
-const demoStudents: Student[] = [
-  { id: "S001", name: "Aarav Kumar", department: "Computer Science", status: "Ongoing", progress: 62 },
-  { id: "S002", name: "Isha Gupta", department: "Electronics", status: "Applied", progress: 10 },
-  { id: "S003", name: "Rohan Verma", department: "Mechanical", status: "Shortlisted", progress: 25 },
-  { id: "S004", name: "Neha Singh", department: "Computer Science", status: "Completed", progress: 100 },
-  { id: "S005", name: "Vikram Rao", department: "Civil", status: "Ongoing", progress: 48 },
-];
-
 export default function FacultyDashboardPage() {
   const { user, logout, loading } = useAuth();
   const isAuthed = user?.role === "faculty";
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [deptFilter, setDeptFilter] = useState<string>("All");
+  const [students, setStudents] = useState<Student[]>([]);
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const [studentsError, setStudentsError] = useState<string | null>(null);
   const router = useRouter();
 
+  // Fetch students from MongoDB API
+  useEffect(() => {
+    if (!isAuthed) return;
+    setStudentsLoading(true);
+    setStudentsError(null);
+    fetch('/api/users?role=student')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch students');
+        return res.json();
+      })
+      .then(json => {
+        const list: Student[] = (Array.isArray(json.users) ? json.users : []).map(
+          (u: Record<string, unknown>) => ({
+            id: String(u.uid ?? u._id ?? ''),
+            name: String(u.name ?? 'Unknown'),
+            department: String(u.department ?? 'General'),
+            status: 'Applied' as Student['status'],  // default; real status comes from internship applications
+            progress: 0,
+          })
+        );
+        setStudents(list);
+      })
+      .catch(() => setStudentsError('Could not load students. Showing placeholder data.'))
+      .finally(() => setStudentsLoading(false));
+  }, [isAuthed]);
+
   const filteredStudents = useMemo(() => {
-    return demoStudents.filter((s) => {
+    return students.filter((s) => {
       const matchesSearch = [s.name, s.id, s.department].some((v) =>
         v.toLowerCase().includes(searchQuery.toLowerCase())
       );
@@ -63,7 +84,7 @@ export default function FacultyDashboardPage() {
       const matchesDept = deptFilter === "All" || s.department === deptFilter;
       return matchesSearch && matchesStatus && matchesDept;
     });
-  }, [searchQuery, statusFilter, deptFilter]);
+  }, [students, searchQuery, statusFilter, deptFilter]);
 
   // Derived analytics from filtered students (must be declared before any conditional returns)
   const analytics = useMemo(() => {
@@ -279,6 +300,16 @@ export default function FacultyDashboardPage() {
                 <h2 className="text-lg md:text-xl font-semibold text-[#1A1A1A]">Student Internship Tracker</h2>
               </div>
               <div className="overflow-x-auto" role="region" aria-label="Internship tracker table">
+                {studentsLoading && (
+                  <div className="flex items-center gap-2 py-4 text-[#555555]">
+                    <span className="h-4 w-4 rounded-full border-2 border-[#0F3D67] border-t-transparent animate-spin" />
+                    <span className="text-sm">Loading students…</span>
+                  </div>
+                )}
+                {studentsError && (
+                  <div className="py-4 px-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md">{studentsError}</div>
+                )}
+                {!studentsLoading && (
                 <table className="min-w-full text-left">
                   <thead>
                     <tr className="text-[#333333]">
@@ -310,6 +341,7 @@ export default function FacultyDashboardPage() {
                     ))}
                   </tbody>
                 </table>
+                )}
               </div>
             </Card>
           </motion.div>

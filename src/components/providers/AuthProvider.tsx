@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from "@/firebaseConfig";
+import { auth } from "@/firebaseConfig";
+// Firestore has been removed. Role is now fetched from MongoDB via /api/users.
 
 type UserRole = 'student' | 'faculty' | 'industry';
 
@@ -32,56 +32,59 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let docUnsub: (() => void) | null = null;
-    const authUnsub = onAuthStateChanged(auth, async (fbUser) => {
+    const unsub = onAuthStateChanged(auth, async (fbUser) => {
       try {
         if (fbUser) {
           setLoading(true);
-          const ref = doc(db, 'users', fbUser.uid);
-          // Real-time subscription to capture role as soon as it is saved
-          docUnsub?.();
-          docUnsub = onSnapshot(ref, (snap) => {
-            const role = snap.exists() ? (snap.data()?.role as UserRole | undefined) : undefined;
-            if (role) {
-              setUser({ uid: fbUser.uid, email: fbUser.email, role });
-              setLoading(false);
-            } else {
-              // Fallback to last selected role to prevent incorrect "not logged" messages
-              try {
-                const lastRole = typeof window !== 'undefined' ? (localStorage.getItem('lastRole') as UserRole | null) : null;
-                if (lastRole && ['student','faculty','industry'].includes(lastRole)) {
-                  setUser({ uid: fbUser.uid, email: fbUser.email, role: lastRole });
-                } else {
-                  setUser(null);
-                }
-              } catch {
-                setUser(null);
-              } finally {
-                // Keep loading false so UI can proceed; snapshot will update when role is saved
-                setLoading(false);
+
+          // 1. Try to fetch the user role from MongoDB
+          let role: UserRole | null = null;
+          try {
+            const res = await fetch(`/api/users?uid=${encodeURIComponent(fbUser.uid)}`);
+            if (res.ok) {
+              const json = await res.json();
+              const fetchedRole = json.user?.role;
+              if (fetchedRole && ['student', 'faculty', 'industry'].includes(fetchedRole)) {
+                role = fetchedRole as UserRole;
               }
             }
-          }, (err) => {
-            console.error('AuthProvider onSnapshot error:', err);
+          } catch {
+            // Network error — fall through to localStorage fallback
+          }
+
+          // 2. Fallback: use the last selected role from localStorage
+          if (!role) {
+            try {
+              const lastRole = typeof window !== 'undefined'
+                ? (localStorage.getItem('lastRole') as UserRole | null)
+                : null;
+              if (lastRole && ['student', 'faculty', 'industry'].includes(lastRole)) {
+                role = lastRole;
+              }
+            } catch {
+              // localStorage may be unavailable in some contexts
+            }
+          }
+
+          if (role) {
+            setUser({ uid: fbUser.uid, email: fbUser.email, role });
+          } else {
+            // User exists in Firebase Auth but has no MongoDB profile yet
+            // (e.g., first login before profile creation)
             setUser(null);
-            setLoading(false);
-          });
+          }
         } else {
           setUser(null);
-          setLoading(false);
-          docUnsub?.();
-          docUnsub = null;
         }
       } catch (e) {
         console.error('AuthProvider error:', e);
         setUser(null);
+      } finally {
         setLoading(false);
       }
     });
-    return () => {
-      authUnsub();
-      docUnsub?.();
-    };
+
+    return () => unsub();
   }, []);
 
   const logout = async () => {

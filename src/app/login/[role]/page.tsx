@@ -149,8 +149,8 @@ import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db, googleProvider } from "@/firebaseConfig";
+import { auth, googleProvider } from "@/firebaseConfig";
+// Note: Firestore replaced by MongoDB. Role is stored/fetched via /api/users.
 
 type UserRole = 'student' | 'faculty' | 'industry';
 
@@ -202,34 +202,31 @@ export default function LoginByRolePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const saveRoleIfMissing = async (uid: string, role: UserRole, email?: string | null) => {
-    const ref = doc(db, 'users', uid);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) {
-      await setDoc(ref, { role, email: email ?? null }, { merge: true });
-    } else if (!snap.data()?.role) {
-      await setDoc(ref, { role }, { merge: true });
-    }
-  };
-
+  /**
+   * Upsert role to MongoDB via /api/users.
+   * Returns the stored role if it already existed, or the fallbackRole if newly created.
+   */
   const resolveUserRole = async (uid: string, fallbackRole: UserRole, email?: string | null): Promise<UserRole> => {
-    const ref = doc(db, 'users', uid);
-    let storedRole: UserRole | undefined;
     try {
-      const snap = await getDoc(ref);
-      storedRole = snap.exists() ? (snap.data()?.role as UserRole | undefined) : undefined;
-    } catch (e) {
-      console.error('Fetching role failed (check Firestore rules):', e);
-    }
-    const finalRole = storedRole ?? fallbackRole;
-    if (!storedRole) {
-      try {
-        await setDoc(ref, { role: finalRole, email: email ?? null }, { merge: true });
-      } catch (e) {
-        console.error('Saving role failed (check Firestore rules):', e);
+      // Check existing profile
+      const getRes = await fetch(`/api/users?uid=${encodeURIComponent(uid)}`);
+      if (getRes.ok) {
+        const json = await getRes.json();
+        const storedRole = json.user?.role as UserRole | undefined;
+        if (storedRole && ['student', 'faculty', 'industry'].includes(storedRole)) {
+          return storedRole;
+        }
       }
+      // Not found or no role — create/upsert with fallback role
+      await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid, role: fallbackRole, email: email ?? null, name: email?.split('@')[0] ?? 'User' }),
+      });
+    } catch (e) {
+      console.error('resolveUserRole error:', e);
     }
-    return finalRole;
+    return fallbackRole;
   };
 
   const handleEmailLogin = async (e: React.FormEvent) => {

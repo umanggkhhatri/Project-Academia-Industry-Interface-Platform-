@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { auth, db } from "@/firebaseConfig";
+import { auth } from "@/firebaseConfig";
+// Note: Firestore replaced by MongoDB. User profile stored via /api/users.
 
 type UserRole = 'student' | 'faculty' | 'industry';
 
@@ -32,7 +32,13 @@ export default function RegisterByRolePage() {
     setLoading(true);
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(db, 'users', cred.user.uid), { role, email: cred.user.email, name }, { merge: true });
+      // Save user profile to MongoDB
+      await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: cred.user.uid, role, email: cred.user.email, name }),
+      });
+      try { localStorage.setItem('lastRole', role); } catch {}
       router.push(roleDest[role]);
     } catch (err) {
       console.error(err);

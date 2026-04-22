@@ -1,7 +1,7 @@
-
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+// NOTE: Firestore (getFirestore) has been removed — data storage is now handled by MongoDB.
+// Firebase Auth is retained for authentication (login/logout).
 
 const firebaseConfig = {
   apiKey: "AIzaSyBweD28Z5hiSEWptYNAMP_RNyC4jPn7O5A",
@@ -15,7 +15,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
-export { auth, db, googleProvider };
+export { auth, googleProvider };
