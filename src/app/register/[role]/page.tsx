@@ -1,12 +1,9 @@
 "use client";
 
-import { useAuth } from '@/components/providers/AuthProvider';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from "@/firebaseConfig";
-// Note: Firestore replaced by MongoDB. User profile stored via /api/users.
+import { useAuth } from '@/components/providers/AuthProvider';
 
 type UserRole = 'student' | 'faculty' | 'industry';
 
@@ -16,35 +13,62 @@ const roleDest: Record<UserRole, string> = {
   industry: '/industry/dashboard',
 };
 
+const roleLabel: Record<UserRole, string> = {
+  student: 'Student',
+  faculty: 'Faculty',
+  industry: 'Industry Partner',
+};
+
 export default function RegisterByRolePage() {
-  const { user } = useAuth();
-  const params = useParams<{ role: UserRole }>();
+  const params = useParams<{ role: string }>();
   const router = useRouter();
-  const role = useMemo<UserRole>(() => (['student','faculty','industry'].includes(params.role) ? params.role as UserRole : 'student'), [params.role]);
+  const { refreshUser } = useAuth();
+
+  const role = useMemo<UserRole>(
+    () => (['student', 'faculty', 'industry'].includes(params.role) ? (params.role as UserRole) : 'student'),
+    [params.role]
+  );
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
+    setError(null);
+
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      // Save user profile to MongoDB
-      await fetch('/api/users', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: cred.user.uid, role, email: cred.user.email, name }),
+        credentials: 'include',
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          password,
+          role,
+        }),
       });
-      try { localStorage.setItem('lastRole', role); } catch {}
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setError(json.error ?? 'Registration failed. Please try again.');
+        return;
+      }
+
+      // Sync AuthProvider state before navigating so the dashboard sees the user immediately
+      await refreshUser();
+
+      // JWT cookie is already set by the server — navigate to dashboard
       router.push(roleDest[role]);
-    } catch (err) {
-      console.error(err);
-      alert('Registration failed. Please try again.');
+    } catch {
+      setError('Network error. Please try again.');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -52,57 +76,86 @@ export default function RegisterByRolePage() {
     <section className="py-16">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-primary-900">Register as {role.charAt(0).toUpperCase() + role.slice(1)}</h1>
-        <p className="text-gray-700 mt-2">Create your {role} account to access the portal.</p>
+          <h1 className="text-3xl font-bold text-primary-900">
+            Register as {roleLabel[role]}
+          </h1>
+          <p className="text-gray-700 mt-2">
+            Create your {role} account to access the portal.
+          </p>
         </div>
 
         <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-6">
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-md p-3 text-sm">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Full Name</label>
+              <label htmlFor="reg-name" className="block text-sm font-medium text-gray-700">
+                Full Name
+              </label>
               <input
+                id="reg-name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600"
+                autoComplete="name"
                 placeholder="Your Name"
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <label htmlFor="reg-email" className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
               <input
+                id="reg-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600"
+                autoComplete="email"
                 placeholder="you@example.com"
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700">Password</label>
+              <label htmlFor="reg-password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
               <input
+                id="reg-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600"
+                minLength={6}
+                autoComplete="new-password"
                 placeholder="••••••••"
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600"
               />
+              <p className="mt-1 text-xs text-gray-500">Minimum 6 characters</p>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              id="register-submit"
+              disabled={submitting}
               className="w-full bg-saffron-500 text-white px-4 py-2 rounded-md hover:bg-saffron-600 transition-colors disabled:opacity-60"
             >
-              {loading ? 'Creating account...' : `Register as ${role}`}
+              {submitting ? 'Creating account…' : `Register as ${roleLabel[role]}`}
             </button>
           </form>
 
-      <div className="mt-6 text-sm text-gray-700 flex justify-between">
-            <Link href={`/login/${role}`} className="text-primary-700 hover:underline">Already have an account? Login</Link>
+          <div className="mt-6 text-sm text-gray-700 flex justify-between">
+            <Link href={`/login/${role}`} className="text-primary-700 hover:underline">
+              Already have an account? Login
+            </Link>
             <div className="space-x-2">
               <Link href="/register/student" className="hover:underline">Student</Link>
               <span>•</span>

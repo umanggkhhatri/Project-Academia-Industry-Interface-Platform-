@@ -8,8 +8,8 @@
 import mongoose, { Document, Model, Schema } from 'mongoose';
 
 export interface IReport {
-  studentUid: string;                    // Firebase UID of the student the report is about
-  generatedBy: string;                   // Firebase UID of whoever triggered generation
+  studentUid: string;                    // MongoDB _id (string) of the student the report is about
+  generatedBy: string;                   // MongoDB _id (string) of whoever triggered generation
   generatorRole: 'student' | 'faculty'; // Who generated the report
   fromDate: string;                      // ISO date string (range start)
   toDate: string;                        // ISO date string (range end)

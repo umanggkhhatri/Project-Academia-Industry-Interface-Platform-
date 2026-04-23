@@ -2,8 +2,10 @@
  * src/models/User.ts
  *
  * Represents a platform user (student, faculty, or industry partner).
- * The `uid` field stores the Firebase Auth UID so that we can link
- * Firebase authentication with MongoDB profile data.
+ * Email is the unique primary identifier. Passwords are stored as
+ * bcrypt hashes (never in plaintext). The `password` field is excluded
+ * from all queries by default (select: false) — you must opt-in with
+ * `.select('+password')` when you need it (login route only).
  */
 
 import mongoose, { Document, Model, Schema } from 'mongoose';
@@ -11,9 +13,9 @@ import mongoose, { Document, Model, Schema } from 'mongoose';
 export type UserRole = 'student' | 'faculty' | 'industry';
 
 export interface IUser {
-  uid: string;           // Firebase Auth UID — primary lookup key
   name: string;
   email: string;
+  password: string;      // bcrypt hash — never returned to clients
   role: UserRole;
   department?: string;   // student / faculty only
   organization?: string; // industry partner only
@@ -28,14 +30,20 @@ export interface IUserDocument extends IUser, Document {}
 
 const UserSchema = new Schema<IUserDocument>(
   {
-    uid: {
+    name: { type: String, required: true, trim: true },
+    email: {
       type: String,
       required: true,
       unique: true,
+      trim: true,
+      lowercase: true,
       index: true,
     },
-    name: { type: String, required: true, trim: true },
-    email: { type: String, required: true, trim: true, lowercase: true },
+    password: {
+      type: String,
+      required: true,
+      select: false, // never included in query results unless explicitly requested
+    },
     role: {
       type: String,
       required: true,

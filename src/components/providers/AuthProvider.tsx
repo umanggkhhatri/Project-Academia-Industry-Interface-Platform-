@@ -1,22 +1,26 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from "@/firebaseConfig";
-// Firestore has been removed. Role is now fetched from MongoDB via /api/users.
 
 type UserRole = 'student' | 'faculty' | 'industry';
 
-type AuthUser = {
-  uid: string;
-  email?: string | null;
+export type AuthUser = {
+  _id: string;
+  email: string;
+  name: string;
   role: UserRole;
+  department?: string;
+  organization?: string;
+  phone?: string;
+  bio?: string;
+  profileComplete: boolean;
 };
 
 type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -31,68 +35,47 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (fbUser) => {
-      try {
-        if (fbUser) {
-          setLoading(true);
-
-          // 1. Try to fetch the user role from MongoDB
-          let role: UserRole | null = null;
-          try {
-            const res = await fetch(`/api/users?uid=${encodeURIComponent(fbUser.uid)}`);
-            if (res.ok) {
-              const json = await res.json();
-              const fetchedRole = json.user?.role;
-              if (fetchedRole && ['student', 'faculty', 'industry'].includes(fetchedRole)) {
-                role = fetchedRole as UserRole;
-              }
-            }
-          } catch {
-            // Network error — fall through to localStorage fallback
-          }
-
-          // 2. Fallback: use the last selected role from localStorage
-          if (!role) {
-            try {
-              const lastRole = typeof window !== 'undefined'
-                ? (localStorage.getItem('lastRole') as UserRole | null)
-                : null;
-              if (lastRole && ['student', 'faculty', 'industry'].includes(lastRole)) {
-                role = lastRole;
-              }
-            } catch {
-              // localStorage may be unavailable in some contexts
-            }
-          }
-
-          if (role) {
-            setUser({ uid: fbUser.uid, email: fbUser.email, role });
-          } else {
-            // User exists in Firebase Auth but has no MongoDB profile yet
-            // (e.g., first login before profile creation)
-            setUser(null);
-          }
-        } else {
-          setUser(null);
-        }
-      } catch (e) {
-        console.error('AuthProvider error:', e);
+  /** Fetch the current session from the server-side JWT cookie. */
+  const fetchMe = async () => {
+    try {
+      const res = await fetch('/api/auth/me', { credentials: 'include' });
+      if (res.ok) {
+        const json = await res.json();
+        setUser(json.user ?? null);
+      } else {
         setUser(null);
-      } finally {
-        setLoading(false);
       }
-    });
+    } catch {
+      setUser(null);
+    }
+  };
 
-    return () => unsub();
+  // On mount: check if there is an active session
+  useEffect(() => {
+    setLoading(true);
+    fetchMe().finally(() => setLoading(false));
   }, []);
 
+  /** Sign out: clear the server-side cookie, then reset local state. */
   const logout = async () => {
-    await signOut(auth);
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch {
+      // Ignore network errors — clear local state regardless
+    }
     setUser(null);
   };
 
-  const value = useMemo(() => ({ user, loading, logout }), [user, loading]);
+  /** Manually re-fetch the user (e.g. after profile update). */
+  const refreshUser = async () => {
+    await fetchMe();
+  };
+
+  const value = useMemo(
+    () => ({ user, loading, logout, refreshUser }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user, loading]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

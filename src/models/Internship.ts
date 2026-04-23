@@ -20,7 +20,7 @@ export interface IInternship {
   stipend?: string;
   description?: string;
   verified: boolean;
-  postedBy?: string;     // Firebase UID of the industry user who posted it (optional for seeded data)
+  postedBy?: string;     // MongoDB _id (string) of the industry user who posted it (optional for seeded data)
   applicants?: number;   // cached count of applicants
   status?: 'Open' | 'Closed';
   createdAt?: Date;
@@ -45,7 +45,7 @@ const InternshipSchema = new Schema<IInternshipDocument>(
     stipend: { type: String, trim: true },
     description: { type: String, trim: true },
     verified: { type: Boolean, default: false },
-    postedBy: { type: String }, // Firebase UID — no foreign key constraint needed
+    postedBy: { type: String }, // MongoDB _id string — no foreign key constraint needed
     applicants: { type: Number, default: 0 },
     status: { type: String, enum: ['Open', 'Closed'], default: 'Open' },
   },

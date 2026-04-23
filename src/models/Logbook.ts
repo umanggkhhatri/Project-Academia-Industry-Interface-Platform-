@@ -10,7 +10,7 @@ import mongoose, { Document, Model, Schema } from 'mongoose';
 export type ReviewStatus = 'Pending' | 'Approved' | 'Needs Changes';
 
 export interface ILogbook {
-  studentUid: string;      // Firebase UID of the student
+  studentUid: string;      // MongoDB _id (string) of the student
   date: string;            // ISO date string, e.g. "2025-10-15"
   title: string;           // Activity title / short summary
   hours: number;           // Hours logged for this entry
@@ -18,7 +18,7 @@ export interface ILogbook {
   tags?: string[];         // Optional tags e.g. ["frontend", "api"]
   status: ReviewStatus;    // Set by faculty during logbook review
   reviewNote?: string;     // Faculty's feedback note to the student
-  reviewedBy?: string;     // Firebase UID of the reviewing faculty member
+  reviewedBy?: string;     // MongoDB _id (string) of the reviewing faculty member
   createdAt?: Date;
   updatedAt?: Date;
 }
