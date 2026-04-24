@@ -44,6 +44,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (process.env.USE_MOCK_DB === 'true') {
+      const safeUser = {
+        _id: "mock_user_" + Date.now().toString(),
+        name: "Mock " + (role ? role.charAt(0).toUpperCase() + role.slice(1) : "User"),
+        email: email.trim().toLowerCase(),
+        role: role as any,
+        profileComplete: false,
+      };
+      const token = signToken({
+        sub: safeUser._id,
+        email: safeUser.email,
+        role: safeUser.role,
+        name: safeUser.name,
+      });
+      return NextResponse.json(
+        { user: safeUser },
+        { status: 200, headers: { 'Set-Cookie': buildSetCookieHeader(token) } }
+      );
+    }
+
     // ── Database ──────────────────────────────────────────────────────────────
     await connectToDatabase();
 

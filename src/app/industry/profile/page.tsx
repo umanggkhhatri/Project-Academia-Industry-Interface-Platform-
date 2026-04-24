@@ -7,6 +7,8 @@ import Button from "@/components/ui/Button";
 import DashboardSidebar, { SidebarItem } from "@/components/layout/DashboardSidebar";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Briefcase, UserCircle, Building2, Settings, ShieldCheck, Bell, FileText, Eye, MessageSquare, Cog } from "lucide-react";
+import Image from "next/image";
+import Avatar from "@/components/ui/Avatar";
 
 type SectionId =
   | "org"
@@ -156,8 +158,13 @@ export default function IndustryProfilePage() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 rounded-full bg-[#E6F0FA] overflow-hidden">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={logoUrl || "/avatar-placeholder.png"} alt="Company Logo" className="w-full h-full object-cover" />
+                        {logoUrl ? (
+                          <div className="relative w-full h-full">
+                            <Image src={logoUrl} alt="Company Logo" fill className="object-cover" />
+                          </div>
+                        ) : (
+                          <Avatar name={companyName || user?.name || "Company"} size="lg" />
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-[#1A1A1A] mb-1">Company Logo</label>

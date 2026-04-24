@@ -18,7 +18,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
-import Internship from '@/models/Internship';
+import { FilterQuery } from 'mongoose';
+import Internship, { IInternshipDocument } from '@/models/Internship';
 
 // ─── GET ────────────────────────────────────────────────────────────────────
 
@@ -36,8 +37,7 @@ export async function GET(req: NextRequest) {
     const skip = Number(searchParams.get('skip') ?? '0');
 
     // Build query filter
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const filter: Record<string, any> = {};
+    const filter: FilterQuery<IInternshipDocument> = {};
 
     if (verified === 'true') filter.verified = true;
     if (verified === 'false') filter.verified = false;

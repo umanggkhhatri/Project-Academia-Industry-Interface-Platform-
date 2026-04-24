@@ -22,6 +22,7 @@ import {
   MessageSquare,
   CloudUpload,
 } from "lucide-react";
+import Skeleton from "@/components/ui/Skeleton";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -747,7 +748,13 @@ export default function StudentDashboardPage() {
                         </div>
                       </div>
 
-                      {resourcesLoading && <p className="text-sm text-[#666666]">Loading resources…</p>}
+                      {resourcesLoading && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {[1, 2, 3].map((i) => (
+                            <Skeleton key={i} className="h-28 w-full" />
+                          ))}
+                        </div>
+                      )}
                       {resourcesError && <p className="text-sm text-[#A61B1B]">{resourcesError}</p>}
 
                       {!resourcesLoading && !resourcesError && (
@@ -923,7 +930,11 @@ export default function StudentDashboardPage() {
                     {/* Results */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {finderLoading && (
-                        <Card className="bg-white p-4">Loading internships…</Card>
+                        <div className="col-span-1 md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {[1, 2, 3, 4, 5, 6].map((i) => (
+                            <Skeleton key={i} className="h-40 w-full" />
+                          ))}
+                        </div>
                       )}
                       {finderError && (
                         <Card className="bg-white p-4 text-[#A61B1B]">{finderError}</Card>

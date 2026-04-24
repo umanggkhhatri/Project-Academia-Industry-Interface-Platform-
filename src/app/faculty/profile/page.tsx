@@ -7,6 +7,8 @@ import Button from "@/components/ui/Button";
 import DashboardSidebar, { SidebarItem } from "@/components/layout/DashboardSidebar";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { UserCircle, Building2, ShieldCheck, FileText, Bell, Eye } from "lucide-react";
+import Image from "next/image";
+import Avatar from "@/components/ui/Avatar";
 
 type SectionId =
   | "personal"
@@ -143,8 +145,13 @@ export default function FacultyProfilePage() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 rounded-full bg-[#E6F0FA] overflow-hidden">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={photoUrl || "/avatar-placeholder.png"} alt="Profile" className="w-full h-full object-cover" />
+                        {photoUrl ? (
+                          <div className="relative w-full h-full">
+                            <Image src={photoUrl} alt="Profile" fill className="object-cover" />
+                          </div>
+                        ) : (
+                          <Avatar name={name || user?.name || "Faculty"} size="lg" />
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-[#1A1A1A] mb-1">Profile Photo</label>

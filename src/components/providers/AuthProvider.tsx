@@ -36,7 +36,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(true);
 
   /** Fetch the current session from the server-side JWT cookie. */
-  const fetchMe = async () => {
+  const fetchMe = React.useCallback(async () => {
     try {
       const res = await fetch('/api/auth/me', { credentials: 'include' });
       if (res.ok) {
@@ -48,33 +48,32 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     } catch {
       setUser(null);
     }
-  };
+  }, []);
 
   // On mount: check if there is an active session
   useEffect(() => {
     setLoading(true);
     fetchMe().finally(() => setLoading(false));
-  }, []);
+  }, [fetchMe]);
 
   /** Sign out: clear the server-side cookie, then reset local state. */
-  const logout = async () => {
+  const logout = React.useCallback(async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     } catch {
       // Ignore network errors — clear local state regardless
     }
     setUser(null);
-  };
+  }, []);
 
   /** Manually re-fetch the user (e.g. after profile update). */
-  const refreshUser = async () => {
+  const refreshUser = React.useCallback(async () => {
     await fetchMe();
-  };
+  }, [fetchMe]);
 
   const value = useMemo(
     () => ({ user, loading, logout, refreshUser }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [user, loading]
+    [user, loading, logout, refreshUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

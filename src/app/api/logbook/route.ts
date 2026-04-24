@@ -10,7 +10,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
-import Logbook from '@/models/Logbook';
+import { FilterQuery } from 'mongoose';
+import Logbook, { ILogbookDocument } from '@/models/Logbook';
 
 // ─── GET ────────────────────────────────────────────────────────────────────
 
@@ -23,8 +24,7 @@ export async function GET(req: NextRequest) {
     const all = searchParams.get('all');
     const status = searchParams.get('status'); // optional filter for faculty
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const filter: Record<string, any> = {};
+    const filter: FilterQuery<ILogbookDocument> = {};
 
     if (all !== 'true') {
       // Student mode — require uid

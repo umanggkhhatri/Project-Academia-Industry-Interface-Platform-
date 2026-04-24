@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-// using plain img for robust fallback between svg and png
+import Image from 'next/image';
 import { ArrowRight, GraduationCap, Users, Building2 } from 'lucide-react';
 import { motion, Variants } from 'framer-motion';
 import Button from '@/components/ui/Button';
@@ -20,13 +20,15 @@ const HeroSection = () => {
   return (
     <section id="home" className="relative overflow-hidden py-20">
       {/* Full-bleed hero background image with fallback */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <Image
         src="/hero-section.png"
         alt="Student giving thumbs up"
-        className="absolute inset-0 w-full h-full object-cover object-right z-0"
+        fill
+        priority
+        className="object-cover object-right z-0"
         onError={(e) => {
           const t = e.currentTarget as HTMLImageElement;
+          t.srcset = '';
           t.src = '/window.svg';
         }}
       />

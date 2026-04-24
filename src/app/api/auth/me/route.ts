@@ -33,6 +33,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
     }
 
+    if (process.env.USE_MOCK_DB === 'true') {
+      const safeUser = {
+        _id: payload.sub,
+        name: payload.name,
+        email: payload.email,
+        role: payload.role,
+        profileComplete: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      return NextResponse.json({ user: safeUser }, { status: 200 });
+    }
+
     // ── Fetch fresh user data from DB ─────────────────────────────────────────
     await connectToDatabase();
     const user = await User.findById(payload.sub).lean();
